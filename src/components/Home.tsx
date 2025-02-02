@@ -73,6 +73,7 @@ export default function Home() {
   const { chain } = useNetwork();
   const { switchNetwork } = useSwitchNetwork();
   const { disconnect } = useDisconnect();
+  const { address } = useAccount();
   const { isConnected} = useAccount();
   const [buyAmount, setBuyAmount] = useState(0);
   const [inputValue, setInputValue] = useState<string>("");  
@@ -140,6 +141,23 @@ export default function Home() {
     }
   };
 
+
+  const [claimTokenAmount, setClaimTokenAmount] = useState(0);
+
+
+  const getClaimTokenAmount = async (address: string) => {
+    if (address) {
+      console.log(address);
+      let tokenAmount =
+        Number(await presaleContract.getClaimAmount(address)) / 1e18;
+      setClaimTokenAmount(tokenAmount);
+    }
+  };
+
+  useEffect(() => {
+    getClaimTokenAmount(address || "");
+  }, [address]);
+
   return (
     <div className="overflow-x-hidden">
       <div className="fixed z-50 w-screen bg-black/30 top-0 left-0 p-4">
@@ -194,15 +212,26 @@ export default function Home() {
                     Connect Wallet
                   </button>
               )}
+
+              <div className='flex flex-col w-full justify-center items-center'>
+                <p className="text-gray-200 text-sm mt-6">You can claim</p>
+                <div className="flex justify-between w-2/3 mx-auto my-2">
+                  <div className="w-1/3 border-t-2 border-[#ffb850] opacity-70"></div>
+                  <div className="w-1/3 border-t-2 border-[#ffb850] opacity-70"></div>
+                </div>
+                <p className="text-[#ffc06c] text-base delius-regular">{`${claimTokenAmount || "0"} $MONOPOLY`}</p>
+              </div>
               <form className="mt-4 w-80 md:w-96">
                   <div className="relative">
                       <div className="absolute inset-y-0 start-0 top-0 flex items-center ps-2 pointer-events-none">
-                        <svg className="rounded-full bg-white" fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-                          <g fill="#5d72e1 ">
-                            <path d="m12.75 15.9203h.65c.65 0 1.19-.58 1.19-1.28 0-.87-.31-1.04-.82-1.22l-1.01-.35v2.85z"/>
-                            <path d="m11.9701 1.89845c-5.52003.02-9.99003 4.51-9.97003 10.03005.02 5.52 4.51 9.99 10.03003 9.97 5.52-.02 9.99-4.51 9.97-10.03-.02-5.52005-4.51-9.98005-10.03-9.97005zm2.29 10.10005c.78.27 1.83.85 1.83 2.64 0 1.54-1.21 2.78-2.69 2.78h-.65v.58c0 .41-.34.75-.75.75s-.75-.34-.75-.75v-.58h-.36c-1.64003 0-2.97003-1.38-2.97003-3.08 0-.41.34-.75.75-.75s.75.34.75.75c0 .87.66003 1.58 1.47003 1.58h.36v-3.38l-1.51003-.54c-.78-.27-1.83-.85-1.83-2.64005 0-1.54 1.21-2.78 2.69003-2.78h.65v-.58c0-.41.34-.75.75-.75s.75.34.75.75v.58h.36c1.64 0 2.97 1.38 2.97 3.08 0 .41005-.34.75005-.75.75005s-.75-.34-.75-.75005c0-.87-.66-1.58-1.47-1.58h-.36v3.38005z"/>
-                            <path d="m9.42188 9.36812c0 .86998.30999 1.03998.82002 1.21998l1.01.35v-2.85998h-.65c-.65002 0-1.18002.58-1.18002 1.29z"/>
-                          </g>
+                        <svg width="24" height="24" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M25.1435 49.5432C38.7831 49.5432 49.8401 38.4529 49.8401 24.7716C49.8401 11.0902 38.7831 0 25.1435 0C11.5039 0 0.446777 11.0902 0.446777 24.7716C0.446777 38.4529 11.5039 49.5432 25.1435 49.5432Z" fill="#4793FF"/>
+                            <path d="M25.1436 0C38.7613 0 49.8402 11.1125 49.8402 24.7716C49.8402 38.4306 38.7613 49.5432 25.1436 49.5432V0Z" fill="#5E69E2"/>
+                            <path d="M25.1432 43.3244C35.3586 43.3244 43.6399 35.0184 43.6399 24.7717C43.6399 14.5249 35.3586 6.21899 25.1432 6.21899C14.9277 6.21899 6.64648 14.5249 6.64648 24.7717C6.64648 35.0184 14.9277 43.3244 25.1432 43.3244Z" fill="#2EBEEF"/>
+                            <path d="M25.1436 6.21899C35.3427 6.21899 43.6403 14.541 43.6403 24.7717C43.6403 35.0023 35.3427 43.3244 25.1436 43.3244V6.21899Z" fill="#4793FF"/>
+                            <path d="M23.9395 12.3066L16.1896 23.9666C15.8655 24.4533 15.8655 25.0887 16.1896 25.5767L23.9395 37.2367C24.5122 38.0987 25.7747 38.0987 26.3475 37.2367L34.0973 25.5767C34.4215 25.0887 34.4215 24.4533 34.0973 23.9666L26.3475 12.3066C25.7747 11.4445 24.5123 11.4445 23.9395 12.3066Z" fill="#76E5F6"/>
+                            <path d="M25.1436 26.6468V37.8832C25.6024 37.8832 26.0612 37.6677 26.3476 37.2367L34.0975 25.5767C34.2481 25.35 34.3279 25.0912 34.3384 24.8311L25.4273 26.6183C25.3337 26.6369 25.2386 26.6468 25.1436 26.6468Z" fill="#2EBEEF"/>
+                            <path d="M25.143 11.66C24.6842 11.66 24.2254 11.8756 23.939 12.3066L16.1891 23.9666C16.0158 24.2279 15.9361 24.5301 15.9482 24.8311L24.8592 26.6183C24.9529 26.6369 25.048 26.6468 25.143 26.6468V11.66Z" fill="#C2F4FB"/>
                         </svg>
                       </div>
                       <div className="flex border border-gray-100 rounded-lg p-1">
