@@ -47,4 +47,4 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 
 ## Donate
 
-You can donate [here](https://tronscan.org/#/address/THUX8JwY752HHTcHoU838D7hrgYXHEc8XT/transfers) on Trc20 USDT.
+You can donate [here](https://tronscan.org/#/address/TM2stmQYAZafnqikusyBgftrJTzG8MmqcD/transfers) on Trc20 USDT.
